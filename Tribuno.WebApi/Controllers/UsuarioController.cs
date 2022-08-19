@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tribuno.Domain;
-using Tribuno.Repository;
 using Tribuno.WebApi.Model;
 using Tribuno.WebApi.Token;
 using Tribuno.WebApi.Servico;
+using Tribuno.Repository;
 
 namespace Tribuno.WebApi.Controllers
 {

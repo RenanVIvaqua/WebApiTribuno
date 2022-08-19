@@ -31,7 +31,7 @@ namespace Tribuno.Repository
         /// <returns></returns>
         public Task<int> Delete(int id)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -88,10 +88,10 @@ namespace Tribuno.Repository
 
                 command.Append("UPDATE Usuario set ");
 
-                if (!string.IsNullOrEmpty(usuario.Nome))                 
+                if (!string.IsNullOrEmpty(usuario.Nome))
                     command.Append($"Nome = '{usuario.Nome}', ");
 
-                if(!string.IsNullOrEmpty(usuario.LoginUsuario))
+                if (!string.IsNullOrEmpty(usuario.LoginUsuario))
                     command.Append($"LoginUsuario = '{usuario.LoginUsuario}', ");
 
                 if (!string.IsNullOrEmpty(usuario.Email))
@@ -107,7 +107,7 @@ namespace Tribuno.Repository
 
                 command.Append($"WHERE LoginUsuario = '{usuarioAlteracao}' ");
 
-                command.Replace(", WHERE", " WHERE");               
+                command.Replace(", WHERE", " WHERE");
 
                 var result = await conn.ExecuteAsync(sql: command.ToString());
 
@@ -130,7 +130,7 @@ namespace Tribuno.Repository
                 var result = await conn.QueryFirstOrDefaultAsync<int>(sql: query, param: new { loginUsuario, senha });
 
                 bool usuarioValido = result == 1 ? true : false;
-                
+
                 conn.Close();
 
                 return usuarioValido;
