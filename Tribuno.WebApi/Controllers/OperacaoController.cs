@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Tribuno.Repository;
@@ -13,7 +12,7 @@ namespace Tribuno.WebApi.Controllers
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("/api/[controller]/[action]")]
     [ApiController]
-    public class OperacaoController : Controller
+    public class OperacaoController : ControllerBase
     {
 
         private readonly IOperacaoRepository operacaoRepository;

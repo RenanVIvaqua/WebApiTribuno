@@ -70,22 +70,27 @@ namespace Tribuno.Repository
 
                 var operacoes = await conn.QueryAsync<Operacao>(sql: query, param: new { idUsuario });
 
-
-                StringBuilder sb = new StringBuilder();
-
-                foreach (var operacao in operacoes)
+                IEnumerable<OperacaoParcela> parcelas;
+                if (operacoes.Count() > 0)
                 {
-                    if (string.IsNullOrEmpty(sb.ToString()))
-                        sb.Append(operacao.IdOperacao);
-                    else
-                        sb.Append("," + operacao.IdOperacao);
+                    StringBuilder sb = new StringBuilder();
+
+                    foreach (var operacao in operacoes)
+                    {
+                        if (string.IsNullOrEmpty(sb.ToString()))
+                            sb.Append(operacao.IdOperacao);
+                        else
+                            sb.Append("," + operacao.IdOperacao);
+                    }
+                    string queryParcela = @"
+                    SELECT IdParcela, IdOperacao, NumeroParcela, ValorParcela, DataVencimento, DataInclusao, DataAlteracao, StatusParcela
+                    FROM OperacaoParcelas WHERE IdOperacao IN (" + sb + ")";
+                    parcelas = await conn.QueryAsync<OperacaoParcela>(sql: queryParcela);
                 }
-
-                string queryParcela = @"
-                 SELECT IdParcela, IdOperacao, NumeroParcela, ValorParcela, DataVencimento, DataInclusao, DataAlteracao, StatusParcela
-                 FROM OperacaoParcelas WHERE IdOperacao IN (" + sb + ")";
-
-                var parcelas = await conn.QueryAsync<OperacaoParcela>(sql: queryParcela);
+                else 
+                {
+                    parcelas = new List<OperacaoParcela>();
+                }              
 
                 foreach (var operacao in operacoes)
                 {

@@ -147,14 +147,20 @@ namespace Tribuno.Repository
         {
             using (IDbConnection conn = new SqlConnection(dbSession.Connection.ConnectionString))
             {
-                string query = "SELECT count(id) from Usuario where LoginUsuario = @nomeLogin";
-                var result = await conn.QueryFirstOrDefaultAsync<int>(sql: query, param: new { nomeLogin });
+                try
+                {
+                    string query = "SELECT count(id) from Usuario where LoginUsuario = @nomeLogin";
+                    var result = await conn.QueryFirstOrDefaultAsync<int>(sql: query, param: new { nomeLogin });
 
-                bool existeLogin = result > 0 ? true : false;
+                    bool existeLogin = result > 0 ? true : false;
 
-                conn.Close();
+                    return existeLogin;
+                }
+                finally 
+                {
+                    conn.Close();
+                }                
 
-                return existeLogin;
             }
         }
     }
