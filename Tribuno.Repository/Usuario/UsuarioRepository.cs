@@ -122,18 +122,16 @@ namespace Tribuno.Repository
         /// <param name="loginUsuario">Login usuário</param>
         /// <param name="senha">Senha</param>
         /// <returns>Validação se o login é valido</returns>
-        public async Task<bool> ValidarUsuario(string loginUsuario, string senha)
+        public async Task<int> ValidarUsuario(string loginUsuario, string senha)
         {
             using (IDbConnection conn = new SqlConnection(dbSession.Connection.ConnectionString))
             {
-                string query = "SELECT count(id) from Usuario where LoginUsuario = @loginUsuario and Senha = @senha";
+                string query = "SELECT id from Usuario where LoginUsuario = @loginUsuario and Senha = @senha";
                 var result = await conn.QueryFirstOrDefaultAsync<int>(sql: query, param: new { loginUsuario, senha });
-
-                bool usuarioValido = result == 1 ? true : false;
 
                 conn.Close();
 
-                return usuarioValido;
+                return result;
             }
 
         }

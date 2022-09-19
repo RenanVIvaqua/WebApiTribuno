@@ -16,7 +16,7 @@ namespace Tribuno.Repository
 
         Task<bool> VerificarSeLoginJaExiste(string Login);
 
-        Task<bool> ValidarUsuario(string nomeLogin, string senha);
+        Task<int> ValidarUsuario(string nomeLogin, string senha);
 
 
     }

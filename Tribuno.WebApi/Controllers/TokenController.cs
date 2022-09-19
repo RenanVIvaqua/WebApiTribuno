@@ -32,7 +32,7 @@ namespace Tribuno.WebApi.Controllers
             Input.Password = MD5Hash.CalculaHash(Input.Password);
 
             var result = await usuarioRepository.ValidarUsuario(Input.Username, Input.Password);
-            if (result)
+            if (result > 0)
             {
                 var token = new TokenJWTBuilder()
                      .AddSecurityKey(JwtSecurityKey.Create("Secret_Key-12345678"))
@@ -43,7 +43,7 @@ namespace Tribuno.WebApi.Controllers
                  .AddExpiry(90)
                  .Builder();
 
-                return Ok(new UsuarioToken() { Username = Input.Username, Token =  token.value });
+                return Ok(new UsuarioToken() {Id = result, Username = Input.Username, Token =  token.value });
             }
             else
             {
@@ -54,6 +54,7 @@ namespace Tribuno.WebApi.Controllers
     }
     public class UsuarioToken
     {
+        public int Id { get; set; }
         public string Username { get; set; }
 
         public string Token { get; set; }
