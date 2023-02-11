@@ -153,14 +153,42 @@ namespace Tribuno.Repository
 
             using (var coon = dbSession.Connection)
             {
-                string command = @"
-                    UPDATE Operacao SET NomeOperacao = @NomeOperacao, ValorOperacao = @ValorOperacao,
-                                        ValorParcela = @ValorParcela, QtdParcela = @QtdParcela, Descricao = @Descricao, 
+                string queryOperacao = @"
+                    UPDATE Operacao SET NomeOperacao = @NomeOperacao, Descricao = @Descricao, 
                                         DataAlteracao = @DataAlteracao, TipoOperacao = @TipoOperacao ,TipoCalculo = @TipoCalculo WHERE IdOperacao = @IdOperacao";
 
-                var result = await coon.ExecuteAsync(sql: command, param: operacao);
+                string queryDeletarParcelas = @"DELETE OperacaoParcelas WHERE IdOperacao = @IdOperacao";
 
-                return result;
+                string queryParcela = @"
+                    INSERT INTO OperacaoParcelas(IdOperacao, NumeroParcela, ValorParcela, DataVencimento, DataInclusao, StatusParcela)
+                    VALUES(@IdOperacao, @NumeroParcela, @ValorParcela, @DataVencimento, @DataInclusao, @StatusParcela)";
+
+                using (var conn = dbSession.Connection.BeginTransaction())
+                {
+                    try
+                    {
+                        operacao.DataAlteracao = DateTime.Now;
+                        var resultOperacao = await dbSession.Connection.QueryAsync<int>(sql: queryOperacao, param: operacao, transaction: conn);
+                        var resultDelete = await dbSession.Connection.QueryAsync<int>(sql: queryDeletarParcelas, param: operacao, transaction: conn);
+
+                        foreach (var parcela in operacao.Parcelas)
+                        {
+                            parcela.IdOperacao = operacao.IdOperacao;
+                            parcela.DataInclusao = DateTime.Now;
+                            await dbSession.Connection.ExecuteAsync(sql: queryParcela, param: parcela, transaction: conn);
+                        }
+                        conn.Commit();
+
+                        return operacao.IdOperacao;
+                    }
+                    catch
+                    {
+                        conn.Rollback();
+                        throw;
+                    }
+                }
+
+
             }
         }
     }
