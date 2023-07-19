@@ -100,7 +100,7 @@ namespace Tribuno.WebApi.Controllers
                 TipoOperacao = operacaoModel.TipoOperacao,
                 TipoCalculo = operacaoModel.TipoCalculo,
                 IdOperacao = operacaoModel.IdOperacao,
-                IdUsuario = 1,
+                IdUsuario = operacaoModel.IdUsuario,
             };
 
             foreach (var parcela in operacaoModel.Parcelas)
@@ -116,7 +116,5 @@ namespace Tribuno.WebApi.Controllers
             return operacao;
 
         }
-
-
     }
 }

@@ -8,6 +8,9 @@ namespace Tribuno.WebApi.Model
 {
     public class OperacaoModel
     {
+        [Required]
+        public int IdUsuario { get; set; }
+
         public int IdOperacao { get; set; }
 
         [Required]
