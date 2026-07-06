@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using Tribuno.Repository;
-using Tribuno.WebApi.Model;
-using Tribuno.Domain;
 using System;
+using System.Threading.Tasks;
+using Tribuno.Application.OperacaoService;
+using Tribuno.Domain;
+using Tribuno.WebApi.Model;
 
 namespace Tribuno.WebApi.Controllers
 {
@@ -13,20 +13,21 @@ namespace Tribuno.WebApi.Controllers
     [Route("/api/[controller]/[action]")]
     [ApiController]
     public class OperacaoController : ControllerBase
-    {
+    {     
+        private readonly IOperacaoService operacaoService;
 
-        private readonly IOperacaoRepository operacaoRepository;
-        public OperacaoController(IOperacaoRepository operacaoRepository)
-        {
-            this.operacaoRepository = operacaoRepository;
+
+        public OperacaoController(IOperacaoService operacaoService)
+        {           
+            this.operacaoService = operacaoService;
         }
 
         [HttpPost]
         public async Task<IActionResult> Save(OperacaoModel operacaoModel)
         {
             try
-            {
-                var result = await operacaoRepository.SaveAsync(RetornaObjetoOperacao(operacaoModel));
+            {                
+                var result = await operacaoService.SaveAsync(RetornaObjetoOperacao(operacaoModel));
                 return Ok(result);
             }
             catch (Exception exception)
@@ -40,7 +41,7 @@ namespace Tribuno.WebApi.Controllers
         {
             try
             {
-                var result = await operacaoRepository.Get(id);
+                var result = await operacaoService.Get(id);
                 return Ok(result);
             }
             catch (Exception exception)
@@ -54,7 +55,7 @@ namespace Tribuno.WebApi.Controllers
         {
             try
             {
-                var result = await operacaoRepository.GetAll(idUsuario);
+                var result = await operacaoService.GetAll(idUsuario);
                 return Ok(result);
             }
             catch (Exception exception)
@@ -68,7 +69,7 @@ namespace Tribuno.WebApi.Controllers
         {
             try
             {
-                var result = await operacaoRepository.Update(RetornaObjetoOperacao(operacaoModel));
+                var result = await operacaoService.Update(RetornaObjetoOperacao(operacaoModel));
                 return Ok(result);
             }
             catch (Exception exception)
@@ -82,7 +83,7 @@ namespace Tribuno.WebApi.Controllers
         {
             try
             {
-                var result = await operacaoRepository.Delete(id);
+                var result = await operacaoService.Delete(id);
                 return Ok(result);
             }
             catch (Exception exception)

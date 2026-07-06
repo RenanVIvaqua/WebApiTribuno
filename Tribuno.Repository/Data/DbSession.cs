@@ -5,16 +5,19 @@ using Microsoft.Extensions.Configuration;
 
 namespace Tribuno.Repository
 {
-    public class DbSession : IDisposable
+    public class DbSession
     {
-        public IDbConnection Connection {get; set;}
+        private readonly string _connectionString;
 
         public DbSession(IConfiguration configuration)
         {
-            Connection = new SqlConnection(configuration.GetConnectionString("DefaultConnection"));
-            Connection.Open();
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
-        public void Dispose() => Connection?.Dispose();        
+
+        public IDbConnection CreateConnection()
+        {
+            return new SqlConnection(_connectionString);
+        }
     }
 
 }

@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tribuno.Domain\Tribuno.Domain.csproj" />
+    <ProjectReference Include="..\Tribuno.Kafka\Tribuno.Kafka.csproj" />
+    <ProjectReference Include="..\Tribuno.Repository\Tribuno.Repository.csproj" />
+  </ItemGroup>
+
+</Project>

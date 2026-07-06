@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -14,8 +9,18 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Tribuno.Application.OperacaoService;
+using Tribuno.Kafka.Consumer;
+using Tribuno.Kafka.DependencyInjection;
+using Tribuno.Kafka.Producer;
 using Tribuno.Repository;
 using Tribuno.WebApi.Token;
+
 
 namespace Tribuno.WebApi
 {
@@ -31,7 +36,17 @@ namespace Tribuno.WebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors();
+            services.AddCors(options =>
+            {
+                options.AddPolicy("Default", builder =>
+                {
+                    builder
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
+
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -39,8 +54,10 @@ namespace Tribuno.WebApi
             });
 
             services.AddScoped<DbSession>();
-            services.AddTransient<IUsuarioRepository, UsuarioRepository>();
-            services.AddTransient<IOperacaoRepository, OperacaoRepository>();
+            services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+            services.AddScoped<IOperacaoRepository, OperacaoRepository>();
+            services.AddScoped<IOperacaoService, OperacaoService>();
+            services.AddKafka(Configuration);
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(option =>
@@ -86,8 +103,9 @@ namespace Tribuno.WebApi
 
             app.UseHttpsRedirection();
             app.UseRouting();
-            app.UseAuthorization();
-            app.UseAuthentication();            
+            app.UseCors("Default");
+            app.UseAuthentication();
+            app.UseAuthorization();            
 
             app.UseEndpoints(endpoints =>
             {

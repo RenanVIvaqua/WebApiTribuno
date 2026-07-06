@@ -41,7 +41,7 @@ namespace Tribuno.Repository
         /// <returns>Objeto usuário</returns>
         public async Task<Usuario> Get(int id)
         {
-            using (var conn = dbSession.Connection)
+            using (var conn = dbSession.CreateConnection())
             {
                 string query = @"SELECT Id, Nome, LoginUsuario, Email, Ativo, DataCadastro, DataAlteracao 
                                 FROM Usuario where Id = @id";
@@ -61,7 +61,7 @@ namespace Tribuno.Repository
         {
             usuario.DataCadastro = DateTime.Now;
 
-            using (var conn = dbSession.Connection)
+            using (var conn = dbSession.CreateConnection())
             {
                 string command = @"
                     INSERT INTO Usuario(Nome, LoginUsuario, Senha, Email, Ativo, DataCadastro)
@@ -82,7 +82,7 @@ namespace Tribuno.Repository
         public async Task<int> Update(Usuario usuario, string usuarioAlteracao)
         {
             usuario.DataAlteracao = DateTime.Now;
-            using (var conn = dbSession.Connection)
+            using (var conn = dbSession.CreateConnection())
             {
                 var command = new StringBuilder();
 
@@ -124,7 +124,7 @@ namespace Tribuno.Repository
         /// <returns>Validação se o login é valido</returns>
         public async Task<int> ValidarUsuario(string loginUsuario, string senha)
         {
-            using (IDbConnection conn = new SqlConnection(dbSession.Connection.ConnectionString))
+            using (var conn = dbSession.CreateConnection())
             {
                 string query = "SELECT id from Usuario where LoginUsuario = @loginUsuario and Senha = @senha";
                 var result = await conn.QueryFirstOrDefaultAsync<int>(sql: query, param: new { loginUsuario, senha });
@@ -143,7 +143,7 @@ namespace Tribuno.Repository
         /// <returns>Validação se o login existe na base</returns>
         public async Task<bool> VerificarSeLoginJaExiste(string nomeLogin)
         {
-            using (IDbConnection conn = new SqlConnection(dbSession.Connection.ConnectionString))
+            using (var conn = dbSession.CreateConnection())
             {
                 try
                 {

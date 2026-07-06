@@ -19,31 +19,38 @@ namespace Tribuno.Repository
 
         public async Task<int> Delete(int idOperacao)
         {
-            using (var conn = dbSession.Connection.BeginTransaction())
+            using (var connection = dbSession.CreateConnection())
             {
+                connection.Open();
                 string queryParcela = @"DELETE OperacaoParcelas WHERE IdOperacao = @idOperacao";
                 string queryOperacao = @"DELETE Operacao WHERE IdOperacao = @idOperacao";
 
+                using var transaction = connection.BeginTransaction();
+
                 try
                 {
-                    await conn.Connection.ExecuteAsync(sql: queryParcela, param: new { idOperacao }, transaction: conn);
-                    var result = await conn.Connection.ExecuteAsync(sql: queryOperacao, param: new { idOperacao }, transaction: conn);
+                    await connection.ExecuteAsync(sql: queryParcela, param: new { idOperacao }, transaction: transaction);
+                    var result = await connection.ExecuteAsync(sql: queryOperacao, param: new { idOperacao }, transaction: transaction);
 
-                    conn.Commit();
+                    transaction.Commit();
 
                     return result;
                 }
                 catch
                 {
-                    conn.Rollback();
+                    transaction.Rollback();
                     throw;
+                }
+                finally 
+                {
+                    connection.Close();
                 }
             }
         }
 
         public async Task<Operacao> Get(int idOperacao)
         {
-            using (var conn = dbSession.Connection)
+            using (var connection = dbSession.CreateConnection())
             {
                 string query = @"
                  SELECT IdOperacao,IdUsuario, NomeOperacao, Descricao, DataCadastro, TipoOperacao, TipoCalculo
@@ -53,8 +60,8 @@ namespace Tribuno.Repository
                  SELECT IdParcela, IdOperacao, NumeroParcela, ValorParcela, DataVencimento, DataInclusao, DataAlteracao, StatusParcela
                  FROM OperacaoParcelas WHERE IdOperacao = @idOperacao";
 
-                var operacao = await conn.QueryFirstOrDefaultAsync<Operacao>(sql: query, param: new { idOperacao });
-                operacao.Parcelas = (await conn.QueryAsync<OperacaoParcela>(sql: queryParcela, param: new { idOperacao })).ToList();
+                var operacao = await connection.QueryFirstOrDefaultAsync<Operacao>(sql: query, param: new { idOperacao });
+                operacao.Parcelas = (await connection.QueryAsync<OperacaoParcela>(sql: queryParcela, param: new { idOperacao })).ToList();
 
                 return operacao;
             }
@@ -62,13 +69,13 @@ namespace Tribuno.Repository
 
         public async Task<List<Operacao>> GetAll(int idUsuario)
         {
-            using (var conn = dbSession.Connection)
+            using (var connection = dbSession.CreateConnection())
             {
                 string query = @"
                  SELECT IdOperacao,IdUsuario, NomeOperacao, Descricao, DataCadastro, TipoOperacao, TipoCalculo
                  FROM Operacao WHERE IdUsuario = @idUsuario";
 
-                var operacoes = await conn.QueryAsync<Operacao>(sql: query, param: new { idUsuario });
+                var operacoes = await connection.QueryAsync<Operacao>(sql: query, param: new { idUsuario });
 
                 IEnumerable<OperacaoParcela> parcelas;
                 if (operacoes.Count() > 0)
@@ -85,12 +92,12 @@ namespace Tribuno.Repository
                     string queryParcela = @"
                     SELECT IdParcela, IdOperacao, NumeroParcela, ValorParcela, DataVencimento, DataInclusao, DataAlteracao, StatusParcela
                     FROM OperacaoParcelas WHERE IdOperacao IN (" + sb + ")";
-                    parcelas = await conn.QueryAsync<OperacaoParcela>(sql: queryParcela);
+                    parcelas = await connection.QueryAsync<OperacaoParcela>(sql: queryParcela);
                 }
-                else 
+                else
                 {
                     parcelas = new List<OperacaoParcela>();
-                }              
+                }
 
                 foreach (var operacao in operacoes)
                 {
@@ -122,27 +129,34 @@ namespace Tribuno.Repository
                     INSERT INTO OperacaoParcelas(IdOperacao, NumeroParcela, ValorParcela, DataVencimento, DataInclusao, StatusParcela)
                     VALUES(@IdOperacao, @NumeroParcela, @ValorParcela, @DataVencimento, @DataInclusao, @StatusParcela)";
 
-            using (var conn = dbSession.Connection.BeginTransaction())
+            using (var connection = dbSession.CreateConnection())
             {
+                connection.Open();
+                var transaction = connection.BeginTransaction();
+
                 try
                 {
                     operacao.DataCadastro = DateTime.Now;
-                    var resultOperacao = await dbSession.Connection.QueryAsync<int>(sql: queryOperacao, param: operacao, transaction: conn);
+                    var resultOperacao = await connection.QueryAsync<int>(sql: queryOperacao, param: operacao, transaction: transaction);
 
                     foreach (var parcela in operacao.Parcelas)
                     {
                         parcela.IdOperacao = resultOperacao.First();
                         parcela.DataInclusao = DateTime.Now;
-                        await dbSession.Connection.ExecuteAsync(sql: queryParcela, param: parcela, transaction: conn);
+                        await connection.ExecuteAsync(sql: queryParcela, param: parcela, transaction: transaction);
                     }
-                    conn.Commit();
+                    transaction.Commit();
 
                     return resultOperacao.First();
                 }
                 catch
                 {
-                    conn.Rollback();
+                    transaction.Rollback();
                     throw;
+                }
+                finally 
+                {
+                    connection.Close();
                 }
             }
         }
@@ -151,7 +165,7 @@ namespace Tribuno.Repository
         {
             operacao.DataAlteracao = DateTime.Now;
 
-            using (var coon = dbSession.Connection)
+            using (var conn = dbSession.CreateConnection())
             {
                 string queryOperacao = @"
                     UPDATE Operacao SET NomeOperacao = @NomeOperacao, Descricao = @Descricao, 
@@ -163,32 +177,37 @@ namespace Tribuno.Repository
                     INSERT INTO OperacaoParcelas(IdOperacao, NumeroParcela, ValorParcela, DataVencimento, DataInclusao, StatusParcela)
                     VALUES(@IdOperacao, @NumeroParcela, @ValorParcela, @DataVencimento, @DataInclusao, @StatusParcela)";
 
-                using (var conn = dbSession.Connection.BeginTransaction())
+                using (var connection = dbSession.CreateConnection())
                 {
+                    connection.Open();
+                    using var transaction = connection.BeginTransaction();
+
                     try
                     {
                         operacao.DataAlteracao = DateTime.Now;
-                        var resultOperacao = await dbSession.Connection.QueryAsync<int>(sql: queryOperacao, param: operacao, transaction: conn);
-                        var resultDelete = await dbSession.Connection.QueryAsync<int>(sql: queryDeletarParcelas, param: operacao, transaction: conn);
+                        var resultOperacao = await connection.QueryAsync<int>(sql: queryOperacao, param: operacao, transaction: transaction);
+                        var resultDelete = await connection.QueryAsync<int>(sql: queryDeletarParcelas, param: operacao, transaction: transaction);
 
                         foreach (var parcela in operacao.Parcelas)
                         {
                             parcela.IdOperacao = operacao.IdOperacao;
                             parcela.DataInclusao = DateTime.Now;
-                            await dbSession.Connection.ExecuteAsync(sql: queryParcela, param: parcela, transaction: conn);
+                            await connection.ExecuteAsync(sql: queryParcela, param: parcela, transaction: transaction);
                         }
-                        conn.Commit();
+                        transaction.Commit();
 
                         return operacao.IdOperacao;
                     }
                     catch
                     {
-                        conn.Rollback();
+                        transaction.Rollback();
                         throw;
                     }
+                    finally 
+                    {
+                        connection.Close();
+                    }
                 }
-
-
             }
         }
     }
